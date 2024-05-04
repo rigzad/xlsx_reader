@@ -44,7 +44,7 @@ defmodule XlsxReader.Parsers.StylesParser do
 
   @impl Saxy.Handler
   def handle_event(:start_element, {"numFmt", attributes}, state) do
-    num_fmt_id = Utils.get_attribute(attributes |> IO.inspect, "numFmtId")
+    num_fmt_id = Utils.get_attribute(attributes, "numFmtId")
     format_code = Utils.get_attribute(attributes, "formatCode")
     {:ok, %{state | custom_formats: Map.put(state.custom_formats, num_fmt_id, format_code)}}
   end
