@@ -91,6 +91,16 @@ defmodule XlsxReader.Parsers.StylesParser do
   end
 
   @impl Saxy.Handler
+  def handle_event(:start_element, {"bgColor", [{"indexed", "64"}]}, %{pointer: {:collect_fill, fill, fills}} = state) do
+    {:ok, %{state | pointer: {:collect_fill, Map.put(fill || %{}, :bg_color, :use_fg_color), fills}}}
+  end
+
+  @impl Saxy.Handler
+  def handle_event(:start_element, {"fgColor", [{"rgb", c}]}, %{pointer: {:collect_fill, fill, fills}} = state) do
+    {:ok, %{state | pointer: {:collect_fill, Map.put(fill || %{}, :fg_color, c), fills}}}
+  end
+
+  @impl Saxy.Handler
   def handle_event(:start_element, _element, state) do
     {:ok, state}
   end
@@ -103,6 +113,11 @@ defmodule XlsxReader.Parsers.StylesParser do
 
   @impl Saxy.Handler
   def handle_event(:end_element, "fill", %{pointer: {:collect_fill, fill, {i, fills}}} = state) do
+    fill = case fill do
+      %{bg_color: :use_fg_color, fg_color: c} -> Map.put(fill, :bg_color, c)
+      %{bg_color: :use_fg_color} -> Map.drop(fill, [:bg_color])
+      _ -> fill
+    end
     {:ok,
      %{state | pointer: {:collect_fills, {i + 1, Map.put(fills, i, fill)}}}}
   end
